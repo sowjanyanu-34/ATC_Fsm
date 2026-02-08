@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Alarm System - FSM Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .state-display {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            border: 3px solid #ddd;
+            transition: all 0.3s ease;
+        }
+        
+        .state-display.idle {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .state-display.warning {
+            background: #fff3cd;
+            border-color: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .state-display.fire {
+            background: #f8d7da;
+            border-color: #dc3545;
+            animation: alarm 0.5s infinite;
+        }
+        
+        .state-display.reset {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        @keyframes alarm {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(220, 53, 69, 0); }
+        }
+        
+        .state-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+        
+        .state-name {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .state-description {
+            font-size: 1.1em;
+            color: #666;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+        
+        .controls h3 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5em;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 15px 25px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-low-smoke {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .btn-high-smoke {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-clear {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-reset {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-start {
+            background: #007bff;
+            color: white;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .fsm-diagram {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .fsm-diagram h3 {
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.5em;
+        }
+        
+        .diagram-svg {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .log-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .log-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.5em;
+        }
+        
+        .log-content {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.95em;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-left: 3px solid #4299e1;
+            padding-left: 10px;
+        }
+        
+        .log-entry.transition {
+            border-left-color: #48bb78;
+        }
+        
+        .log-entry.input {
+            border-left-color: #ed8936;
+        }
+        
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Fire Alarm System</h1>
+            <p>Finite State Machine (FSM) Demonstration</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="state-display idle" id="stateDisplay">
+                    <div class="state-icon" id="stateIcon">🟢</div>
+                    <div class="state-name" id="stateName">IDLE</div>
+                    <div class="state-description" id="stateDescription">System is monitoring. No danger detected.</div>
+                </div>
+                
+                <div class="controls">
+                    <h3>🎮 Sensor Inputs</h3>
+                    <div class="button-group">
+                        <button class="btn-low-smoke" onclick="handleInput('low_smoke')">
+                            💨 Low Smoke Detected
+                        </button>
+                        <button class="btn-high-smoke" onclick="handleInput('high_smoke')">
+                            🔥 High Smoke / Heat
+                        </button>
+                        <button class="btn-clear" onclick="handleInput('clear')">
+                            ✅ Environment Clear
+                        </button>
+                        <button class="btn-reset" onclick="handleInput('reset')">
+                            🔄 Reset System
+                        </button>
+                        <button class="btn-start" onclick="handleInput('start')">
+                            ▶ Return to IDLE
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="fsm-diagram">
+                <h3>📊 FSM State Diagram</h3>
+                <svg class="diagram-svg" viewBox="0 0 500 400">
+                    <!-- IDLE State -->
+                    <circle cx="100" cy="100" r="40" fill="#28a745" stroke="#000" stroke-width="2" id="circle-idle"/>
+                    <text x="100" y="105" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">IDLE</text>
+                    <polygon points="40,100 60,95 60,105" fill="#000"/>
+                    
+                    <!-- WARNING State -->
+                    <circle cx="400" cy="100" r="40" fill="#ffc107" stroke="#000" stroke-width="2" id="circle-warning"/>
+                    <text x="400" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#000">WARNING</text>
+                    
+                    <!-- FIRE State -->
+                    <circle cx="400" cy="300" r="40" fill="#dc3545" stroke="#000" stroke-width="2" id="circle-fire"/>
+                    <text x="400" y="305" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">FIRE</text>
+                    
+                    <!-- RESET State -->
+                    <circle cx="100" cy="300" r="40" fill="#17a2b8" stroke="#000" stroke-width="2" id="circle-reset"/>
+                    <text x="100" y="305" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">RESET</text>
+                    
+                    <!-- Transitions -->
+                    <!-- IDLE to WARNING -->
+                    <path d="M 140 100 L 360 100" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)" id="arrow-idle-warning"/>
+                    <text x="250" y="90" text-anchor="middle" font-size="12">low_smoke</text>
+                    
+                    <!-- WARNING to FIRE -->
+                    <path d="M 400 140 L 400 260" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)" id="arrow-warning-fire"/>
+                    <text x="430" y="200" text-anchor="middle" font-size="12">high_smoke</text>
+                    
+                    <!-- FIRE to RESET -->
+                    <path d="M 360 300 L 140 300" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)" id="arrow-fire-reset"/>
+                    <text x="250" y="290" text-anchor="middle" font-size="12">reset</text>
+                    
+                    <!-- RESET to IDLE -->
+                    <path d="M 100 260 L 100 140" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)" id="arrow-reset-idle"/>
+                    <text x="70" y="200" text-anchor="middle" font-size="12">start</text>
+                    
+                    <!-- WARNING to IDLE (clear) -->
+                    <path d="M 380 80 Q 250 50 120 80" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)" id="arrow-warning-idle"/>
+                    <text x="250" y="55" text-anchor="middle" font-size="12">clear</text>
+                    
+                    <!-- IDLE to FIRE (direct high_smoke) -->
+                    <path d="M 130 120 Q 250 200 370 280" stroke="#000" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5" id="arrow-idle-fire"/>
+                    <text x="230" y="220" text-anchor="middle" font-size="12">high_smoke</text>
+                    
+                    <!-- Arrow marker definition -->
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="#000"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+        
+        <div class="log-section">
+            <h3>📝 Transition Log</h3>
+            <div class="log-content" id="logContent">
+                <div class="log-entry">System initialized in IDLE state</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // FSM State Machine
+        let currentState = 'IDLE';
+        
+        const states = {
+            IDLE: {
+                icon: '🟢',
+                name: 'IDLE',
+                description: 'System is monitoring. No danger detected.',
+                class: 'idle',
+                transitions: {
+                    low_smoke: 'WARNING',
+                    high_smoke: 'FIRE'
+                }
+            },
+            WARNING: {
+                icon: '⚠',
+                name: 'WARNING',
+                description: 'Low smoke detected! System on alert.',
+                class: 'warning',
+                transitions: {
+                    high_smoke: 'FIRE',
+                    clear: 'IDLE'
+                }
+            },
+            FIRE: {
+                icon: '🔥',
+                name: 'FIRE',
+                description: 'DANGER! Fire detected! Alarm activated!',
+                class: 'fire',
+                transitions: {
+                    reset: 'RESET'
+                }
+            },
+            RESET: {
+                icon: '🔄',
+                name: 'RESET',
+                description: 'System reset initiated. Returning to normal.',
+                class: 'reset',
+                transitions: {
+                    start: 'IDLE'
+                }
+            }
+        };
+        
+        function handleInput(input) {
+            const state = states[currentState];
+            const nextState = state.transitions[input];
+            
+            if (nextState) {
+                addLog(`Input received: ${input}`, 'input');
+                addLog(`Transition: ${currentState} → ${nextState}`, 'transition');
+                currentState = nextState;
+                updateDisplay();
+                highlightTransition(currentState, nextState);
+            } else {
+                addLog(`⚠ Invalid input "${input}" for state ${currentState}`, 'error');
+            }
+        }
+        
+        function updateDisplay() {
+            const state = states[currentState];
+            const display = document.getElementById('stateDisplay');
+            
+            // Update state display
+            document.getElementById('stateIcon').textContent = state.icon;
+            document.getElementById('stateName').textContent = state.name;
+            document.getElementById('stateDescription').textContent = state.description;
+            
+            // Update display class
+            display.className = `state-display ${state.class}`;
+            
+            // Highlight current state in diagram
+            highlightCurrentState();
+            
+            addLog(`Current state: ${currentState}`, 'state');
+        }
+        
+        function highlightCurrentState() {
+            // Reset all circles
+            ['idle', 'warning', 'fire', 'reset'].forEach(s => {
+                const circle = document.getElementById(`circle-${s}`);
+                if (circle) {
+                    circle.setAttribute('stroke-width', '2');
+                }
+            });
+            
+            // Highlight current
+            const currentCircle = document.getElementById(`circle-${currentState.toLowerCase()}`);
+            if (currentCircle) {
+                currentCircle.setAttribute('stroke-width', '5');
+            }
+        }
+        
+        function highlightTransition(from, to) {
+            const arrowId = `arrow-${from.toLowerCase()}-${`to.toLowerCase()`}`;
+            const arrow = document.getElementById(arrowId);
+            
+            if (arrow) {
+                arrow.style.stroke = '#ff0000';
+                arrow.style.strokeWidth = '4';
+                
+                setTimeout(() => {
+                    arrow.style.stroke = '#000';
+                    arrow.style.strokeWidth = '2';
+                }, 1000);
+            }
+        }
+        
+        function addLog(message, type = '') {
+            const logContent = document.getElementById('logContent');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            
+            logContent.appendChild(entry);
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
