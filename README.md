@@ -17,4 +17,4 @@ The purpose of this project is to detect fire (or fire conditions) and alert use
    ```bash
    git clone https://github.com/sowjanyanu-34/ATC_Fsm.git
 ## Live demo
-   [Live Demo] (https://firealaramsystem.netlify.app/)
+   [Live Demo](https://firealaramsystem.netlify.app/)
