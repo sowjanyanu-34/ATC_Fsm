@@ -1,4 +1,4 @@
-# Fire_alaram_system
+# Fire_alaram_system:
 
 ## 🔥 Project Overview  
 Fire_alaram_system is a project to implement a fire-alarm / fire detection / alert system.  
